@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 #st.set_page_config(layout="wide")
+st.set_page_config(page_title='SimulationApp',page_icon=':100:')
 st.title('Simulador de Pandemias :earth_americas:')
 @st.cache
 def deriv(y, t, N, beta, gamma, sigma, xi, mu):
