@@ -4,10 +4,11 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 
-st.set_page_config(layout="wide")
-
+#st.set_page_config(layout="wide")
+st.title('Simulador de Pandemias :earth_americas:')
 @st.cache
 def deriv(y, t, N, beta, gamma, sigma, xi, mu):
+    #Ecuaciones del cambio para solucionar
     S, E, I, R, D = y
     dSdt = -beta(t) * S * I / N + xi * R 
     dEdt = beta(t) * S * I / N - sigma * E
@@ -16,7 +17,7 @@ def deriv(y, t, N, beta, gamma, sigma, xi, mu):
     dDdt = mu * I
     return dSdt, dEdt, dIdt, dRdt,dDdt
 
-
+#La sidebar NO se actualiza cada vez que recarga el archivo!!!
 N = st.sidebar.number_input('Población Total',min_value=1_000,max_value=100_000_000,value=1_000_000,step=1_000)
 D = st.sidebar.number_input('Duración de la Infección',min_value=1,max_value=20,value=10,step=1) # infections lasts four days
 gamma = 1.0 / D
@@ -34,7 +35,7 @@ hig = hig*0.25/100
 vac = st.sidebar.slider('Porcentaje de Vacunados',0,100,0,1)
 vac = vac/100
 
-mu = st.sidebar.slider('Tasa de Mortalidad',0,10,0,1)
+mu = st.sidebar.slider('Porcentaje de Mortalidad',0,10,0,1)
 mu = mu/100
 
 #beta = (1-tap)*(1-hig)*R_0 * gamma   # R_0 = beta / gamma, so beta = R_0 * gamma
@@ -54,7 +55,7 @@ if st.sidebar.checkbox('¿Hay Encerramiento?'):
 else: 
     L = 1000
     dur=0
-
+#Para el encerramiento:
 def R__0(t):
     return R_0 if ((t < L)|(t>(L+dur))) else 0.9
 def beta(t):
@@ -62,10 +63,11 @@ def beta(t):
 
 t_max = st.sidebar.number_input('Tiempo Máximo de Simulación',min_value=100,value=400,step=10)
 
-st.write('\u03C3:',str(sigma),'\u03B3:',str(gamma),'\u03B2:',str(beta(0)),'\u03BE:',str(xi),'\u03BC',str(mu))
+st.write('Parametros: ','\u03C3:',str(sigma),'\u03B3:',str(gamma),'\u03B2:',str(beta(0)),'\u03BE:',str(xi),'\u03BC',str(mu))
 S0, E0, I0, R0, D0 = N-1 -(N*vac), 1, 0, N*vac, 0  # initial conditions: one exposed
-
+#A los susceptibles les quitamos los vacunados, y a los recuperados se los sumamos
 t = np.linspace(0, t_max, t_max)
+#Es necesario que sean t_max pasos para que el df sea acorde
 
 y0 = S0, E0, I0, R0, D0 # Initial conditions vector
 
