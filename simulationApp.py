@@ -8,13 +8,13 @@ import matplotlib.pyplot as plt
 st.set_page_config(page_title='SimulationApp',page_icon=':100:')
 st.title('Simulador de Pandemias :earth_americas:')
 @st.cache
-def deriv(y, t, N, beta, gamma, sigma, xi, mu):
+def deriv(y, t, N, beta, gamma, sigma, xi, mu, nu):
     #Ecuaciones del cambio para solucionar
     S, E, I, R, D = y
-    dSdt = -beta(t) * S * I / N + xi * R 
+    dSdt = -beta(t) * S * I / N + xi * R -nu(t)*S #nu(t)*S vacunados en tiempo t, solo vacunación sobre susceptibles es efectiva
     dEdt = beta(t) * S * I / N - sigma * E
     dIdt = sigma * E - (1-mu)*gamma * I - mu*I
-    dRdt = (1-mu)*gamma * I - xi*R
+    dRdt = (1-mu)*gamma * I - xi*R +nu(t) *S
     dDdt = mu * I
     return dSdt, dEdt, dIdt, dRdt,dDdt
 
@@ -33,8 +33,6 @@ tap = tap*0.35/100
 hig = st.sidebar.slider('Porcentaje de Higiene (lavado de manos)',0,100,0,1)
 hig = hig*0.25/100
 
-vac = st.sidebar.slider('Porcentaje de Vacunados',0,100,0,1)
-vac = vac/100
 
 mu = st.sidebar.slider('Porcentaje de Mortalidad',0,10,0,1)
 mu = mu/100
@@ -62,18 +60,27 @@ def R__0(t):
 def beta(t):
     return (1-tap)*(1-hig)*R__0(t) * gamma
 
+if st.sidebar.checkbox('¿Hay vacunación?'):
+    vac = st.sidebar.slider('Porcentaje de Vacunados',0,100,0,1)
+    dia = st.sidebar.number_input('Día de Vacunación',1,None,10,1)
+else:
+    vac=0
+    dia=0
+def nu(t):
+    return vac/100 if (t<dia+1+vac/100)&(t>=dia) else 0.0   #Tasa de vacunación
+
 t_max = st.sidebar.number_input('Tiempo Máximo de Simulación',min_value=100,value=400,step=10)
 
-st.write('Parametros: ','\u03C3:',str(sigma),'\u03B3:',str(gamma),'\u03B2:',str(beta(0)),'\u03BE:',str(xi),'\u03BC',str(mu))
-S0, E0, I0, R0, D0 = N-1 -(N*vac), 1, 0, N*vac, 0  # initial conditions: one exposed
-#A los susceptibles les quitamos los vacunados, y a los recuperados se los sumamos
+st.write('Parametros: ','\u03C3:',str(sigma),'\u03B3:',str(gamma),'\u03B2:',str(beta(0)),'\u03BE:',str(xi),'\u03BC',str(mu),'\u03BD',str(nu(0)))
+S0, E0, I0, R0, D0 = N-1 , 1, 0, 0, 0  # initial conditions: one exposed
+#A los susceptibles les quitamos los vacunados, y a los recuperados se los sumamos (En las ecuaciones)
 t = np.linspace(0, t_max, t_max)
 #Es necesario que sean t_max pasos para que el df sea acorde
 
 y0 = S0, E0, I0, R0, D0 # Initial conditions vector
 
 # Integrate the SIR equations over the time grid, t.
-ret = odeint(deriv, y0, t, args=(N, beta, gamma, sigma, xi, mu))
+ret = odeint(deriv, y0, t, args=(N, beta, gamma, sigma, xi, mu, nu))
 S, E, I, R, D = ret.T
 
 population = pd.DataFrame(columns=['Susceptibles','Expuestos','Infectados','Recuperados','Fallecidos','Total'])
