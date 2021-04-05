@@ -10,4 +10,4 @@ El archivo .py contiene codigo de la interfaz, y ecuaciones diferenciales para e
 - Mu: Tasa de Mortalidad.
 - Nu: Tasa de Vacunación.
 
-[Despliegue.](https://share.streamlit.io/jlmarrugom/simulationapp/main/simulationApp.py)
+Interactua con la app [aquí.](https://share.streamlit.io/jlmarrugom/simulationapp/main/simulationApp.py)
